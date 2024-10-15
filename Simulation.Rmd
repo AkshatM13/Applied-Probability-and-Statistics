@@ -1,0 +1,48 @@
+---
+title: "Quantifying uncertainty using simulation"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: console
+---
+
+#### Execute the following cells to load the libraries
+```{r}
+library(ggplot2)
+library(dplyr)
+```
+
+#### Sampling space and likelihood vector
+```{r}
+s = c('H', 'T')
+p = c(0.5, 0.5)
+```
+
+
+#### Function to simulate one trial of the random experiment which in this case is tossing 10 fair coins at a time
+```{r}
+simTrial = function(){
+  return(sample(s, 10, replace = TRUE, prob = p))
+}
+```
+
+#### Replicate the trials of the random experiment a large number of times
+```{r}
+nsimulations = 10000
+simulatedData = replicate(nsimulations, simTrial())
+```
+
+#### Function to check if event of interest has occured which in this case is getting exactly 3 heads
+```{r}
+checkEvent = function(data){
+  return(sum(data == 'H') == 3)
+}
+```
+
+#### Calculate the fraction of times the event of interest occured which is what we define as the approximate probability of the event E happening in the next trial of the random experiment
+```{r}
+#simulatedData
+mean(apply(simulatedData, 2, checkEvent))
+```

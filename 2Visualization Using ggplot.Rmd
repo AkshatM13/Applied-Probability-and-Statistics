@@ -1,0 +1,161 @@
+---
+title: "Intro to R"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: console
+---
+
+#### Execute the following cells to load the libraries
+```{r}
+library(ggplot2)
+library(dplyr)
+```
+
+#### Load the food texture dataset
+```{r}
+#file = 'http://openmv.net/file/food-texture.csv'
+file = 'food-texture.csv'
+foodData = read.csv(file, header = TRUE, row.names = 1, stringsAsFactors = FALSE)
+head(foodData, 2)
+str(foodData)
+```
+
+#### Modify Crispy column to reflect high (0) or low (1) crispiness
+```{r}
+foodData = foodData %>% mutate(Crispylevel = ifelse(Crispy > 11, 'High', 'Low'))
+```
+
+##### Change Crispy and Crispylevel columns to factor (categorical) type
+```{r}
+# Continuous features -> Oil, Density, Hardness, Fracture
+# Categorical features -> Crispy (8 levels 8 through 15) and Crispylevel (2 levels 0 and 1)
+# Crispy is a categorical feature with an order
+str(foodData)
+categorical_cols = c('Crispy', 'Crispylevel')
+foodData[categorical_cols] = lapply(foodData[categorical_cols], as.factor)
+str(foodData)
+```
+
+#### Visualize the Oil Percentage feature (continuous) using a histogram
+```{r}
+p = ggplot(data = foodData) +
+  geom_histogram(aes(x = Oil), binwidth = 1, color = 'steelblue')
+p
+```
+
+```{r}
+p = ggplot(data = foodData[foodData$Crispy == 13, ]) +
+  geom_histogram(aes(x = Density), binwidth = 100, color = 'blue')
+p
+```
+
+```{r}
+p = ggplot(data = foodData) +
+  geom_histogram(aes(x = Hardness), binwidth = 10, color = 'steelblue')
+p
+```
+
+
+
+#### Scatter plot between Oil Percentage and Density (relating two continuous variables)
+```{r}
+p = ggplot(data = foodData) +
+  geom_point(aes(x = Density, y = Oil), color = 'red') +
+  labs(x = 'Density', y = 'Oil percentage', title = 'Pastry Analysis')
+p
+```
+
+#### Scatter plot between OilPercentage and Density color coded with Crispylevel
+```{r}
+p = ggplot(data = foodData) +
+  geom_point(aes(x = Density, y = Oil)) +
+  labs(x = 'Density', y = 'Oil percentage', title = 'Pastry Analysis')
+p
+```
+
+```{r}
+p = ggplot(data = foodData) +
+  geom_point(aes(x = Density, y = Oil, color = Crispylevel)) +
+  labs(x = 'Density', y = 'Oil percentage', title = 'Pastry Analysis')
+p
+
+```
+
+
+#### Scatter plot between Density and Hardness
+```{r}
+```
+
+#### Scatter plot between Density and Fracture
+```{r}
+```
+
+#### Smooth line plot using ggplot
+```{r}
+p = ggplot(data = foodData) +
+  geom_smooth(aes(x = Oil, y = Density))
+p
+```
+
+#### Barplot for Crispy (categorical variable)
+```{r}
+p = ggplot(data = foodData) +
+  geom_bar(aes(x = Crispy))
+p
+```
+
+#### In-built functions for dataframes
+```{r}
+# Mean oil percentage across all samples
+
+# Mean-centering of OilPercentage
+
+# Sum of the squared deviation from the mean
+
+# Average of the squared deviation from the mean
+
+# Variance of OilPercentage
+
+# Standard deviation of OilPercentage
+```
+
+
+#### Box plot using ggplot with color coding
+```{r}
+p = ggplot(data = foodData) +
+  geom_boxplot(aes(y = Oil))
+p
+```
+
+```{r}
+p = ggplot(data = foodData) +
+  geom_boxplot(aes(x = Crispylevel, y = Oil))
+p
+```
+
+```{r}
+p = ggplot(data = foodData[foodData$Crispylevel == 'Low', ]) +
+  geom_histogram(aes(x = Density), binwidth = 100, color = 'blue')
+p
+```
+
+
+```{r}
+f
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

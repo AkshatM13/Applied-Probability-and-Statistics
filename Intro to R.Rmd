@@ -1,0 +1,303 @@
+---
+title: "Intro to R"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: console
+---
+
+#### Execute the following cells to load the libraries
+```{r}
+a= matrix(c(0.05, 0.10, 0.05, 0.05,
+            0.05, 0.10, 0.05, 0.05,
+            0.05, 0.05, 0.10, 0.05,
+            0.05, 0.05, 0.10, 0.05),
+                nrow=4, byrow=TRUE)
+
+
+b= matrix(c(0.75, 0.90, 0.75, 0.05,
+                        0.05, 0.75, 0.95, 0.75,
+                        0.01, 0.05, 0.75, 0.95,
+                        0.01, 0.01, 0.05, 0.75),
+                      nrow=4, byrow=TRUE)
+
+c=a*b
+d=sum(c)
+print(d)
+e=c/d
+print(e)
+```
+
+
+#### Creating homeogenous datastructures: vectors and matrices (built on the fundamental datatypes character, numeric, integer, and logical)
+```{r}
+myvector1 = c(1, 2, 3) # a vector of integers/numeric?
+myvector2 = c('a', 'b', 'c') # a vector of characters
+myvector3 = c(TRUE, FALSE, FALSE) # a vector of booleans
+myvector4 = c(1.5, 2.5, 3.5) # a vector of numerics
+myvector5 = 1:10 # creates a vector comprising 1 through 10
+myvector6 = seq(1, 10, by = 0.5) # Creates a vector comprising 1, 1.5, 2.0 etc
+print(myvector1)
+print(myvector2)
+print(myvector3)
+print(myvector4)
+print(myvector5)
+print(myvector6)
+
+mymatrix1 = matrix(c(1, 2, 3, 4, 5, 6), nrow = 2, ncol = 3)
+mymatrix2 = matrix(c(1, 2, 3, 4, 5, 6), nrow = 2, ncol = 3, byrow = TRUE)
+print(mymatrix1)
+print(mymatrix2)
+```
+
+#### Creating a list, a heterogenous datastructure
+```{r}
+mylist1 = list(1, 'Name', c('Math', 'Physics', 'Chemistry'))
+print(mylist1)
+```
+
+#### Accessing elements of a datastructure
+```{r}
+myvector1[1]
+myvector6[10]
+mymatrix2[1, 3]
+mymatrix2[1, ]
+mymatrix2[, 2]
+```
+
+#### Loading data into a dataframe, a heterogenous datastructure
+```{r}
+#file = 'http://openmv.net/file/food-texture.csv'
+file = 'food-texture.csv'
+foodData = read.csv(file, header = TRUE, row.names = 1, stringsAsFactors = FALSE)
+head(foodData, 5)
+```
+
+#### Attributes of a dataframe
+```{r}
+str(foodData)
+nrow(foodData)
+ncol(foodData)
+colnames(foodData)
+rownames(foodData)
+```
+
+#### Get the data type and the data structure associated with an object
+```{r}
+typeof(myvector1)
+typeof(myvector2)
+str(myvector1)
+str(myvector2)
+str(foodData)
+```
+
+#### Accessing elements of a data frame in a particular column
+```{r}
+foodData$Oil
+foodData[['Oil']]
+foodData[, 'Oil']
+foodData['Oil']
+foodData[1, 'Oil']
+foodData['B110', 'Oil']
+```
+
+#### Accessing elements of multiple columns of a dataframe (using base R and dplyr)
+```{r}
+foodData[c('Oil', 'Density')]
+foodData %>% select(c(Oil, Density))
+#foodData[-c('Oil', 'Density')]
+foodData %>% select(-c(Oil, Density))
+```
+
+ggplot
+```{r}
+foodData[foodData[['Oil']]>17,]
+foodData[foodData[['Oil']]>17,c('Crispy' , 'Hardness')]
+```
+
+dplyr
+```{r}
+foodData %>% filter(Oil >18)
+foodData%>%filter(Oil>18) %>% select(Crispy)
+```
+
+
+```{r}
+(foodData$Oil == 9) & (foodData$Crispy == 15)
+(foodData$Oil == 9) | (foodData$Crispy == 15)
+```
+
+
+
+```{r}
+foodData %>% filter(Crispy %in% c(9,15))
+foodData %>% filter(!(Crispy %in% c(9,15)))
+
+```
+
+#Modify a col into Dataframe
+```{r}
+foodData=foodData%>%mutate(Densitynew = Density/2)
+colnames(foodData)
+```
+
+
+
+#### Load the court dataset
+```{r}
+file = 'Data/court.csv'
+courtData = read.csv(file, header = TRUE)
+head(courtData, 5)
+```
+
+
+
+#### For-loop and if-statement
+```{r}
+count = 0
+for (j in 1:nrow(foodData)){
+  if (foodData[j, 'Oil'] >= 16){
+    count = count +1
+  }
+}
+print(count / nrow(foodData))
+```
+
+#### User-defined function
+```{r}
+judgeEdecision = function(n){
+  decision = sample(c(0, 1), n, replace = TRUE, prob = c(0.2, 0.8))
+  return(decision)
+}
+```
+
+#### Calling the user-defined function
+```{r}
+judgeEdecision(10)
+```
+
+
+#### Matrix example - judges problem
+```{r}
+courtdecision = function(){
+  jcp = apply(courtData, 2, mean)
+
+  jicp = 1-jcp # broadcasting
+  P = matrix(c(jcp, jicp), nrow = 2, ncol = length(jcp), byrow = TRUE)
+  decision = c(1, 0)
+  cdecision = vector('integer', ncol(P))
+  for (j in 1:ncol(P)){
+    cdecision[j] = sample(decision, 1, prob = P[, j])
+  }
+  if (sum(cdecision) >= 3){
+    return(1)
+    }
+  else{
+    return(0)
+}
+}
+```
+
+#### Court incorrect probability
+```{r}
+results = replicate(10000, courtdecision())
+1-mean(results)
+```
+
+#### Accessing rows of a dataframe satisfying certain conditions
+```{r}
+```
+
+#### Accessing row of a dataframe satisfying certain condition and particular columns
+```{r}
+```
+
+#### Accessing rows of a dataframe satisfying certain conditions
+```{r}
+#Filter samples with Crispy index 9 or 15 (which are very rare)
+```
+
+#### Modifying a column of a dataframe
+```{r}
+```
+
+#### Modify Crispy column to reflect high (0) or low (1) crispiness
+```{r}
+
+foodData=foodData %>% mutate(Crispylevel = ifelse(Crispy > 11 ,1,0))
+foodData=foodData %>% mutate(Crispylevel = ifelse(Crispy > 11 ,'High' , 'Low'))
+foodData
+```
+
+##### Change Crispy and Crispylevel columns to factor (categorical) type
+```{r}
+categorical_cols = c('Crispy', 'Crispylevel')
+str(foodData)
+lapply(foodData[categorical_cols],as.factor)
+#foodData[categorical_cols] = lapply(categorical_cols, as.factor)
+str(foodData)
+```
+
+#### Visualize the OilPercentage feature
+```{r}
+```
+
+#### In-built functions for dataframes
+```{r}
+# Mean oil percentage across all samples
+
+# Mean-centering of OilPercentage
+
+# Sum of the squared deviation from the mean
+
+# Average of the squared deviation from the mean
+
+# Variance of OilPercentage
+
+# Standard deviation of OilPercentage
+```
+
+#### Scatter plot between OilPercentage and Density
+```{r}
+```
+
+#### Scatter plot between OilPercentage and Density color coded with Crispylevel
+```{r}
+```
+
+#### Scale continuous columns of the dataframe
+```{r}
+```
+
+#### Calculate the correlation matrix for the continuous features
+```{r}
+
+```
+
+#### Scatter plot between Density and Hardness
+```{r}
+```
+
+#### Scatter plot between Density and Fracture
+```{r}
+```
+
+```{r}
+file = 'Data/court.csv'
+courtData = read.csv(file, header = TRUE)
+head(courtData, 5)
+```
+
+
+
+
+
+
+
+
+
+
+
+

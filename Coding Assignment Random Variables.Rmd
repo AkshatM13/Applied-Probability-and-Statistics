@@ -1,0 +1,97 @@
+---
+title: "Coding Assignment on Random Variables"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: console
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+# Following package is for side-by-side plots. First run install.packages('patchwork') from console
+library(patchwork) 
+```
+
+#### Run the following cell to simulate the heights (in cm) of 100000 male students
+```{r}
+# Parameters
+mu_Male = 170
+sigma_Male = 8
+
+# Bin width
+delta = 2.0
+
+nsimulations = 1e5
+simulatedData_Male = rnorm(nsimulations, mean = mu_Male, sd = sigma_Male)
+```
+
+#### Convert the simulated data into a data frame
+```{r}
+dfHeights = data.frame(MaleHeight=simulatedData_Male)
+colnames(dfHeights) = c('MaleHeight')
+head(dfHeights)
+```
+
+#### Calculate the following:
+1. probability that a random student's height is equal to 170 cm.
+```{r}
+prob1 = dnorm(170, mean = mu_Male, sd = sigma_Male)
+print(prob1)
+```
+
+2. probability that a random student's height is in between 170 cm and 172 cm.
+```{r}
+prob2 = pnorm(172, mean = mu_Male, sd = sigma_Male) - pnorm(170, mean = mu_Male, sd = sigma_Male)
+print(prob2)
+```
+
+3. probability that a random student's height is in between 170 cm and 171 cm.
+
+```{r}
+prob3=pnorm(171, mean = mu_Male, sd = sigma_Male) - pnorm(170, mean = mu_Male, sd = sigma_Male)
+print(prob3)
+```
+
+#### Plot three different types of histogram for the male students' heights and explain what each histogram means:
+1. frequency histogram
+2. relative frequency histogram
+3. density histogram 
+```{r}
+# Plot the frequency histogram for male student heights
+
+p1 = ggplot(data = dfHeights) +
+  geom_histogram(aes(x = MaleHeight, y = after_stat(count)),
+  breaks = seq(mu_Male-4*sigma_Male, mu_Male+4*sigma_Male, by = delta),
+  colour = 'black', fill = 'steelblue', alpha = 0.4) +
+  labs(x = 'Height (cm)', y = 'Frequency')
+
+# Plot the relative frequency histogram for male student heights
+p2 = ggplot(data = dfHeights) +
+  geom_histogram(aes(x = MaleHeight, y = after_stat(count)/sum(after_stat(count))),
+  breaks = seq(mu_Male-4*sigma_Male, mu_Male+4*sigma_Male, by = delta),
+  colour = 'black', fill = 'steelblue', alpha = 0.4) +
+  labs(x = 'Height (cm)', y = 'Relative Frequency')
+
+# Plot the density histogram for male student heights
+p3 = ggplot(data = dfHeights) +
+  geom_histogram(aes(x = MaleHeight, y = after_stat(density)),
+  breaks = seq(mu_Male-4*sigma_Male, mu_Male+4*sigma_Male, by = delta),
+  colour = 'black', fill = 'steelblue', alpha = 0.4) +
+  labs(x = 'Height (cm)', y = 'Density')
+
+# Plot the density histogram along with density curve for male student heights
+p4 = ggplot(data = dfHeights) +
+  geom_histogram(aes(x = MaleHeight, y = after_stat(density)),
+  breaks = seq(mu_Male-4*sigma_Male, mu_Male+4*sigma_Male, by = delta),
+  colour = 'black', fill = 'steelblue', alpha = 0.4) +
+  stat_function(fun = dnorm, args = list(mean = mean(dfHeights$MaleHeight), sd = sd(dfHeights$MaleHeight))) +
+  labs(x = 'Height (cm)', y = 'Density')
+
+# Plot the histograms side-by-side
+p1 + p2 + p3 + p4 + plot_layout(ncol = 2)
+```
+
+
