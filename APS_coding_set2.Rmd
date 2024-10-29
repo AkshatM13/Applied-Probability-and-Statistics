@@ -1,0 +1,196 @@
+---
+title: "APS Odd Semester 2024 Coding Problem Set-2"
+editor_options:
+  chunk_output_type: console
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+
+```
+
+
+
+```{r}
+# Load the house price d
+hData = read.csv('houseprices.csv', header = TRUE, stringsAsFactors = FALSE, na.strings = c("", "NA", "Not Available", "not available"))
+str(hData)
+```
+
+
+```{r}
+na.omit(hData)
+
+```
+
+```{r}
+# Convert 'locality', 'facing' and 'parking' columns to factors
+categorical_cols = c('locality', 'facing', 'parking')
+hData[categorical_cols] = lapply(hData[categorical_cols], as.factor)
+str(hData)
+```
+
+```{r}
+# Continuous columns
+continuous_cols = setdiff(colnames(hData), categorical_cols)
+```
+
+```{r}
+# Plot percentage of NAs in each column of the data frame
+hData_NA = setNames(stack(sapply(hData, function(x){(sum(is.na(x))/length(x))*100}))[2:1], c('Feature','Value'))
+p = ggplot(data = hData_NA, aes(x = Feature, y = Value)) +
+  geom_bar(stat = 'identity', fill = 'steelblue', width = 0.3) +
+  theme(text = element_text(size = 14, face = 'bold'),
+  axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
+  xlab('') + ylab('Percentage') +
+  ggtitle('Percentage of NAs across all features')
+p
+```
+
+#can see that there are none values in facing and parking
+
+```{r}
+# Add NA as a factor level for categorical columns 
+hData[categorical_cols] = lapply(hData[categorical_cols], addNA)
+str(hData)
+```
+
+
+
+```{r}
+# Scatter Plot: Rent vs Area, colored by BHK
+ggplot(hData, aes(x = area, y = rent, color = factor(BHK))) +
+  geom_point(alpha = 0.7) +
+  labs(title = "Scatter Plot of Rent vs Area (Colored by BHK)",
+       x = "Area (sqft)", y = "Rent (INR)") +
+  theme_minimal()
+
+
+#1-As the area increases, rent generally tends to rise.
+#2-Properties with higher BHK values are clustered at higher rents, indicating that #larger properties (more rooms) are priced higher.
+
+
+
+```
+
+
+```{r}
+# correlation matrix
+numeric_cols <- hData[, c("area", "rent", "price_per_sqft", "BHK", "bathrooms")]
+
+# Compute the correlation matrix
+cor_matrix <- cor(numeric_cols, use = "complete.obs")
+corrplot(cor_matrix, method = "color", type = "upper", 
+         tl.col = "black", tl.srt = 45, addCoef.col = "black")
+
+#Correlation Analysis - 
+ #1- (r=0.79): Rent tends to increase as area increases.
+ 
+#2- Price per Sqft and Bathrooms (0.080264)-
+#very weak positive correlation btw price_per_sqft and bathrooms. The number of bathrooms has little to no effect on the price per square foot.
+
+#3- Area and Bathrooms (0.812822):
+#There is a strong positive correlation between area and bathrooms. Larger properties tend to have more bathrooms.
+
+#4-Price per Sqft and Bathrooms (0.080264):
+
+#There is a very weak positive correlation between price_per_sqft and bathrooms. The number of bathrooms has little to no effect on the price per square foot.
+
+
+```
+
+
+```{r}
+
+mean_rent <- mean(hData$rent)
+sd_rent <- sd(hData$rent)
+
+# Plot the histogram with density and lines for mean and standard deviation
+ggplot(hData, aes(x = rent)) +
+  geom_histogram(aes(y = ..density..), bins = 100, fill = "green", color = "black", alpha = 0.7) +  # Histogram with outlines
+  geom_density(color = "black", size = 1) +  # Add density curve
+  geom_vline(aes(xintercept = mean_rent), color = "blue", linetype = "dashed", size = 1) +  # Mean line
+  geom_vline(aes(xintercept = mean_rent + sd_rent), color = "red", linetype = "dotted", size = 1) +  # +1 Standard Deviation
+  geom_vline(aes(xintercept = mean_rent - sd_rent), color = "red", linetype = "dotted", size = 1) +  # -1 Standard Deviation
+  labs(title = "Distribution of Rent with Mean and Standard Deviation", x = "Rent", y = "Density") +
+  
+  # Add text label for mean rent on the graph
+  annotate("text", x = mean_rent, y = 0.00002, label = paste("Mean =", round(mean_rent, 2)), color = "blue", angle = 90, vjust = -0.5, size = 4) +
+  
+  theme_minimal()
+
+```
+
+---
+histogram of rent prices shows a right-skewed distribution, indicating that most properties have relatively lower rent prices, with a few high-rent outliers pulling the average up. The mean rent is approx 61,652, as represented by a dashed blue line on the graph.  This wide standard deviation reflects a large variation in rent values, with a spread from affordable to luxury properties 
+---
+
+
+```{r}
+# Calculate and print summary statistics for Rent
+rent_mean <- mean(hData$rent, na.rm = TRUE)
+rent_sd <- sd(hData$rent, na.rm = TRUE)
+rent_var <- var(hData$rent, na.rm = TRUE)
+cat("Rent - Mean:", rent_mean, " | SD:", rent_sd, " | Variance:", rent_var, "\n")
+```
+
+```{r}
+ggplot(hData, aes(x = parking, y = area)) +
+  geom_boxplot() +
+  labs(title = "Box Plot of Rent by Parking", x = "Parking", y = "Area") +
+  theme_minimal()
+```
+
+```{r}
+ggplot(hData, aes(x = locality)) +
+  geom_bar(fill = "skyblue", color = "black") +
+  labs(
+    title = "Number of Houses by Locality", 
+    x = "Locality", 
+    y = "Number of Houses"
+  ) +
+  theme_minimal(base_size = 15) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  )
+```
+
+
+```{r}
+ggplot(hData, aes(x = locality, y = price_per_sqft, fill = locality)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 8) +
+  labs(
+    title = "Distribution of Price per Sqft by Locality", 
+    x = "Locality", 
+    y = "Price per Sqft (INR)"
+  ) +
+  theme_minimal(base_size = 15) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+```
+
+
+```{r}
+# Box plot of Rent by Parking with colors
+ggplot(hData, aes(x = as.factor(parking), y = rent, fill = as.factor(parking))) +
+  geom_boxplot() +
+  labs(title = "Rent Distribution by Parking Spaces",
+       x = "Parking Spaces",
+       y = "Rent (INR)") +
+  scale_fill_brewer(palette = "Set3") +  # Choose a color palette
+  theme_minimal() +
+  theme(legend.title = element_blank())  # Remove legend title
+
+```
+
+
